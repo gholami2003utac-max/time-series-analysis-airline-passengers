@@ -1,4 +1,4 @@
-# time-series-analysis-airline-passengers
+# Time-Series-Analysis-Airline-Passengers
 # Time Series Analysis of Airline Passengers (1949–1960)
 
 ## Project Overview
