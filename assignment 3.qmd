@@ -1,0 +1,1248 @@
+---
+title: "Assignment 3"
+author: "Gholami"
+format: html
+editor: visual
+---
+
+### Part 1– Run-sequence plot and stationary conditions
+
+#### Part (a)
+
+```{r}
+
+# Install packages (run once if needed)
+packages <- c("TSA", "tseries", "urca")
+new_packages <- packages[!(packages %in% installed.packages()[, "Package"])]
+if (length(new_packages) > 0) {
+    install.packages(new_packages)
+}
+
+# Load package and dataset
+library(TSA)
+data(airpass)
+
+# Convert to time series object
+y <- ts(airpass, start = c(1949, 1), frequency = 12)
+
+# Check data
+length(y)
+start(y)
+end(y)
+frequency(y)
+
+# Run-sequence plot
+plot(
+    y,
+    type = "l",
+    main = "Monthly International Airline Passengers (1949–1960)",
+    xlab = "Year",
+    ylab = "Passengers (thousands)"
+)
+
+```
+
+The run-sequence plot of the monthly international airline passengers from 1949 to 1960 shows a clear upward trend. The number of passengers increases over time, indicating that the mean is not constant. The plot also exhibits a repeating seasonal pattern with a period of 12 months. Furthermore, the amplitude of the seasonal fluctuations increases over time, suggesting that the variance is not constant. Therefore, the series appears to be non-stationary.
+
+#### Part (b)
+
+```{r}
+
+conditions <- data.frame(
+    Condition = c(
+        "Constant mean",
+        "Constant variance",
+        "Constant autocorrelation structure",
+        "No periodic component"
+    ),
+    Status = c(
+        "Violated",
+        "Violated",
+        "Violated",
+        "Violated"
+    ),
+    Evidence = c(
+        "Clear upward trend from 1949 to 1960",
+        "Seasonal swings become larger over time",
+        "Persistent trend and repeating seasonal dependence",
+        "Seasonal pattern repeats every 12 months"
+    )
+)
+
+print(conditions, row.names = FALSE)
+
+  
+```
+
+The plot indicates that all four stationary conditions are violated. First, the constant mean condition is violated because the series exhibits a clear upward trend from 1949 to 1960. Second, the constant variance condition is violated because the seasonal fluctuations become larger over time. Third, the constant autocorrelation structure condition is considered violated because the series shows persistent trend and seasonal dependence. Finally, the condition of having no periodic component is violated because a seasonal pattern repeats approximately every 12 months. Therefore, the airpass time series is non-stationary.
+
+### Part 2– Summary statistics over chunks
+
+#### Part (a)
+
+```{r}
+# Load the dataset
+library(TSA)
+data(airpass)
+
+# Create the time series
+y <- ts(airpass, start = c(1949, 1), frequency = 12)
+
+# Divide the series into three equal chunks
+chunk1 <- y[1:48]
+chunk2 <- y[49:96]
+chunk3 <- y[97:144]
+
+# Calculate variances
+var1 <- var(chunk1)
+var2 <- var(chunk2)
+var3 <- var(chunk3)
+
+# Calculate the variance ratio
+variance_ratio <- max(var1, var2, var3) /
+    min(var1, var2, var3)
+
+# Display results
+cat("Variance 1 =", round(var1, 2), "\n")
+cat("Variance 2 =", round(var2, 2), "\n")
+cat("Variance 3 =", round(var3, 2), "\n")
+cat("Variance ratio =", round(variance_ratio, 2), "\n")
+```
+
+```{r}
+
+
+# Create the results table
+results <- data.frame(
+    Statistic = c("Mean", "Variance"),
+    Chunk_1 = c(mean(chunk1), var(chunk1)),
+    Chunk_2 = c(mean(chunk2), var(chunk2)),
+    Chunk_3 = c(mean(chunk3), var(chunk3))
+)
+
+# Round only numeric columns
+results[, 2:4] <- round(results[, 2:4], 2)
+
+# Display the table
+print(results, row.names = FALSE)
+
+
+```
+
+#### Part (b)
+
+```{r}
+
+# Calculate the variance ratio
+variance_ratio <- max(
+    var(chunk1),
+    var(chunk2),
+    var(chunk3)
+) / min(
+    var(chunk1),
+    var(chunk2),
+    var(chunk3)
+)
+
+cat("Variance ratio =", round(variance_ratio, 2))
+
+```
+
+Both the mean and the variance deviate strongly across the three chunks. The mean increases from 158.38 in Chunk 1 to 413.48 in Chunk 3. Similarly, the variance increases from 1094.66 to 6162.00. The ratio of the largest to the smallest chunk variance is approximately 5.63. These substantial changes indicate that the series is non-stationary in both its mean and variance.
+
+#### Part (c)
+
+```{r}
+
+chunk_means <- c(
+    mean(chunk1),
+    mean(chunk2),
+    mean(chunk3)
+)
+
+chunk_variances <- c(
+    var(chunk1),
+    var(chunk2),
+    var(chunk3)
+)
+
+plot(
+    chunk_means,
+    chunk_variances,
+    type = "b",
+    pch = 19,
+    xlab = "Chunk Mean",
+    ylab = "Chunk Variance",
+    main = "Chunk Mean vs Chunk Variance"
+)
+
+text(
+    chunk_means,
+    chunk_variances,
+    labels = c("Chunk 1", "Chunk 2", "Chunk 3"),
+    pos = 3
+)
+
+```
+
+Yes, the chunk variances appear to grow together with the chunk means. As the mean increases across the three chunks, the variance also increases substantially. This suggests a relationship between the mean and the variance. Therefore, a logarithmic transformation may be needed later to stabilize the variance. The transformation is not applied at this stage.
+
+### Part 3– Histogram
+
+#### Part (a)
+
+```{r}
+
+# Plot histogram
+hist(
+    y,
+    breaks = 15,
+    probability = TRUE,
+    main = "Histogram of Air Passengers",
+    xlab = "Number of Passengers (thousands)",
+    ylab = "Density",
+    col = "lightblue",
+    border = "black"
+)
+
+# Add density curve
+lines(
+    density(y),
+    col = "red",
+    lwd = 2
+)
+
+# Add normal distribution curve
+curve(
+    dnorm(x, mean = mean(y), sd = sd(y)),
+    add = TRUE,
+    col = "blue",
+    lwd = 2
+)
+
+legend(
+    "topright",
+    legend = c("Density curve", "Normal curve"),
+    col = c("red", "blue"),
+    lwd = 2
+)
+
+```
+
+The histogram of the airpass series is not approximately normal. It is positively skewed (right-skewed), with a longer tail toward larger passenger values. This suggests that the data may have a changing mean and variance, and that a transformation such as the logarithm may be useful.
+
+#### Part (b)
+
+A histogram only shows the overall distribution of the observations and ignores the order in which the data occur over time. Therefore, it cannot reveal trends, seasonal patterns, or changes in the mean and variance over time. A stationary and a non-stationary time series can have similar histograms, so a histogram alone cannot prove stationary.
+
+### Part 4– Augmented Dickey–Fuller (ADF) test
+
+#### Part (a)
+
+The trend specification is appropriate because the run-sequence plot shows a clear upward trend in the airpass series. Therefore, both an intercept and a linear time trend should be included in the ADF regression.
+
+The chosen equation is:
+
+$Δyₜ = α + βt + γyₜ₋₁ + εₜ$
+
+The null hypothesis $H₀: γ = 0$ means that the series has a unit root and is non-stationary. The alternative hypothesis $Hₐ: γ < 0$ means that the unit-root hypothesis is rejected and the series is stationary around a deterministic linear trend.
+
+#### Part (b)
+
+```{r}
+
+# Original airpass series
+y <- as.numeric(y)
+
+# First difference
+dy <- diff(y)
+
+# Time index
+n <- length(y)
+time <- 1:n
+
+# Fixed effective sample: drop first 13 observations
+# Dependent variable: dy[t], t = 14, ..., n
+response <- dy[13:(n - 1)]
+
+# Deterministic terms
+trend <- time[14:n]
+lag_y <- y[13:(n - 1)]
+
+# Check sample size
+length(response)
+length(trend)
+length(lag_y)
+
+```
+
+```{r}
+
+# Function to estimate the trend ADF regression
+run_adf_manual <- function(p) {
+    
+    # Create data frame with fixed sample
+    dat <- data.frame(
+        dy = response,
+        trend = trend,
+        lag_y = lag_y
+    )
+    
+    # Add lagged differences
+    if (p > 0) {
+        for (j in 1:p) {
+            dat[[paste0("dy_lag", j)]] <-
+                dy[(13 - j):(n - 1 - j)]
+        }
+    }
+    
+    # Construct regression formula
+    predictors <- c("trend", "lag_y")
+    
+    if (p > 0) {
+        predictors <- c(
+            predictors,
+            paste0("dy_lag", 1:p)
+        )
+    }
+    
+    formula_adf <- as.formula(
+        paste("dy ~", paste(predictors, collapse = " + "))
+    )
+    
+    # OLS estimation
+    model <- lm(formula_adf, data = dat)
+    
+    # Extract coefficient of lagged level
+    coef_table <- summary(model)$coefficients
+    
+    gamma_hat <- coef_table["lag_y", "Estimate"]
+    se_gamma <- coef_table["lag_y", "Std. Error"]
+    
+    # ADF t-statistic
+    t_adf <- gamma_hat / se_gamma
+    
+    # Information criteria
+    aic_value <- AIC(model)
+    bic_value <- BIC(model)
+    
+    return(data.frame(
+        Lag = p,
+        Gamma = gamma_hat,
+        SE_Gamma = se_gamma,
+        ADF = t_adf,
+        AIC = aic_value,
+        BIC = bic_value
+    ))
+}
+
+# Run for p = 0,...,12
+results_adf <- do.call(
+    rbind,
+    lapply(0:12, run_adf_manual)
+)
+
+# Display results
+print(round(results_adf, 4), row.names = FALSE)
+
+```
+
+```{r}
+
+# Lag selected by AIC
+best_AIC <- results_adf$Lag[
+    which.min(results_adf$AIC)
+]
+
+# Lag selected by BIC
+best_BIC <- results_adf$Lag[
+    which.min(results_adf$BIC)
+]
+
+cat("Lag selected by AIC:", best_AIC, "\n")
+cat("Lag selected by BIC:", best_BIC, "\n")
+
+```
+
+#### Part (c)
+
+```{r}
+
+library(urca)
+library(tseries)
+
+# ADF with trend and AIC lag selection
+adf_AIC <- ur.df(
+    y,
+    type = "trend",
+    lags = 12,
+    selectlags = "AIC"
+)
+
+# ADF with trend and BIC lag selection
+adf_BIC <- ur.df(
+    y,
+    type = "trend",
+    lags = 12,
+    selectlags = "BIC"
+)
+
+# Print complete test summaries
+summary(adf_AIC)
+summary(adf_BIC)
+
+```
+
+```{r}
+
+# ADF test using tseries
+adf_tseries <- adf.test(
+    y,
+    alternative = "stationary"
+)
+
+print(adf_tseries)
+
+```
+
+#### Part (d)
+
+```{r}
+
+# ADF with drift
+adf_drift <- ur.df(
+    y,
+    type = "drift",
+    lags = 12,
+    selectlags = "AIC"
+)
+
+# ADF with no deterministic terms
+adf_none <- ur.df(
+    y,
+    type = "none",
+    lags = 12,
+    selectlags = "AIC"
+)
+
+# Display results
+summary(adf_drift)
+summary(adf_none)
+
+```
+
+```{r}
+
+# Drift specification
+cat("DRIFT specification:\n")
+print(adf_drift@teststat)
+print(adf_drift@cval)
+
+# None specification
+cat("\nNONE specification:\n")
+print(adf_none@teststat)
+print(adf_none@cval)
+
+```
+
+### Part 5– Phillips–Perron (PP) test
+
+#### Part (a)
+
+The ADF and PP tests have the same basic hypotheses: the null hypothesis states that the series has a unit root, while the alternative hypothesis states that the series is stationary under the chosen deterministic specification.
+
+The ADF test handles serial correlation by adding lagged differences to the regression. The selected ADF model uses p lagged-difference terms. In contrast, the PP test uses a non-parametric correction based on the long-run variance to account for serial correlation and heteroscedasticity without adding lagged-difference regressors. Therefore, ADF uses additional degrees of freedom as more lags are included, whereas PP does not lose regression degrees of freedom through additional lagged-difference coefficients.
+
+#### Part (b)
+
+```{r}
+
+# Use the AIC-selected lag from Part 4
+p_selected <- best_AIC
+
+# Rebuild the regression data
+dat <- data.frame(
+    dy = response,
+    trend = trend,
+    lag_y = lag_y
+)
+
+if (p_selected > 0) {
+    for (j in 1:p_selected) {
+        dat[[paste0("dy_lag", j)]] <-
+            dy[(13 - j):(n - 1 - j)]
+    }
+}
+
+# Build the regression formula
+predictors <- c("trend", "lag_y")
+
+if (p_selected > 0) {
+    predictors <- c(predictors, paste0("dy_lag", 1:p_selected))
+}
+
+formula_selected <- as.formula(
+    paste("dy ~", paste(predictors, collapse = " + "))
+)
+
+# Estimate selected ADF model
+adf_selected_model <- lm(
+    formula_selected,
+    data = dat
+)
+
+# Extract residuals
+res <- residuals(adf_selected_model)
+
+cat("Selected lag:", p_selected, "\n")
+cat("Number of residuals:", length(res), "\n")
+
+```
+
+```{r}
+
+# Plot residuals
+plot(
+    res,
+    type = "l",
+    main = "Residuals of Selected ADF Regression",
+    xlab = "Observation",
+    ylab = "Residuals"
+)
+
+abline(h = 0, lty = 2)
+
+```
+
+```{r}
+
+# Squared residuals
+res_sq <- res^2
+
+plot(
+    res_sq,
+    type = "l",
+    main = "Squared Residuals of ADF Regression",
+    xlab = "Observation",
+    ylab = "Squared Residuals"
+)
+
+```
+
+```{r}
+
+# Ljung-Box test on squared residuals
+box_squared <- Box.test(
+    res_sq,
+    lag = 12,
+    type = "Ljung-Box"
+)
+
+print(box_squared)
+
+```
+
+#### Part (c)
+
+```{r}
+
+library(urca)
+library(tseries)
+
+# Phillips-Perron test with trend
+pp_trend <- ur.pp(
+    y,
+    type = "Z-tau",
+    model = "trend",
+    lags = "short"
+)
+
+# Display full results
+summary(pp_trend)
+
+```
+
+```{r}
+
+# Extract PP statistic
+pp_stat <- as.numeric(pp_trend@teststat)
+
+# Extract critical values
+pp_critical <- pp_trend@cval
+
+cat("PP Z-tau statistic:\n")
+print(pp_stat)
+
+cat("\nCritical values:\n")
+print(pp_critical)
+
+```
+
+```{r}
+
+pp_tseries <- pp.test(
+    y,
+    alternative = "stationary"
+)
+
+print(pp_tseries)
+
+```
+
+### (a) Comparison of ADF and PP Tests
+
+Both the Augmented Dickey–Fuller (ADF) and Phillips–Perron (PP) tests examine the null hypothesis that a time series contains a unit root and is therefore non-stationary.
+
+The main difference is how they handle serial correlation. The ADF test adds lagged differences to the regression, which requires estimating additional parameters and reduces the degrees of freedom. In contrast, the PP test uses a non-parametric correction to account for serial correlation and heteroscedasticity without adding lagged differences to the regression.
+
+### (b) Residual Analysis
+
+The selected ADF model used 12 lagged differences and produced 131 residuals. The residual plots showed some large fluctuations and spikes, particularly toward the end of the sample, suggesting possible changes in volatility.
+
+The Ljung–Box test on squared residuals produced the following results:
+
+- X-squared = 5.5287
+
+- Degrees of freedom = 12
+
+- p-value = 0.938
+
+Since the p-value is greater than 0.05, the null hypothesis of no autocorrelation in squared residuals up to lag 12 cannot be rejected. Therefore, there is no significant evidence of autocorrelation in squared residuals. However, this does not necessarily prove constant variance.
+
+The PP test is useful as a complementary test because it accounts for serial correlation and heteroscedasticity through a non-parametric correction.
+
+### (c) Phillips–Perron Test Results
+
+The PP test was performed using a model with an intercept and a linear trend.
+
+The hypotheses are:
+
+- H0: The series has a unit root and is non-stationary.
+
+- H1: The series is stationary around a deterministic linear trend.
+
+The `ur.pp()` test produced the following results:
+
+| Measure            | Value   |
+|--------------------|---------|
+| Z-tau statistic    | -5.0473 |
+| 1% critical value  | -4.0245 |
+| 5% critical value  | -3.4417 |
+| 10% critical value | -3.1452 |
+
+Since the test statistic (-5.0473) is more negative than the 1% critical value (-4.0245), the null hypothesis is rejected at the 1% significance level.
+
+The additional `pp.test()` result also rejects the unit-root null hypothesis, reporting a Z-alpha statistic of -46.406 and a p-value of 0.01.
+
+### Part 6– KPSS test
+
+##### (a) State H0 and Ha of KPSS.Suppose ADFrejects its null for some series: which KPSS outcome
+
+would confirm stationarity and which would contradict it? Explain why the opposite null hypotheses make KPSS useful as a confirmatory test.
+
+The KPSS (Kwiatkowski–Phillips–Schmidt–Shin) test is used to examine whether a time series is stationary. Unlike the ADF and PP tests, the KPSS test has stationarity as its null hypothesis.
+
+There are two main versions of the KPSS test:
+
+1.  Trend Stationarity
+
+$H_0$​ : The time series is stationary around a deterministic linear trend.
+
+$H_a$ ​ : The time series is non-stationary and contains a unit root.
+
+2.  Level Stationarity
+
+$H_0$ ​ : The time series is stationary around a constant mean (level).
+
+$H_a$ ​ : The time series is non-stationary.
+
+Relationship between ADF and KPSS tests:
+
+The ADF and KPSS tests have opposite null hypotheses. The ADF test assumes that the series contains a unit root under the null hypothesis, whereas the KPSS test assumes that the series is stationary.
+
+If the ADF test rejects its null hypothesis, evidence supports stationarity. A KPSS result that fails to reject its null hypothesis would confirm this conclusion.
+
+However, if both tests reject their respective null hypotheses, their results contradict each other. This may indicate that the series has more complicated characteristics, such as structural breaks, changing variance, or an inappropriate deterministic specification.
+
+Therefore, using both tests provides a more comprehensive assessment of stationary.
+
+#### Part(b)
+
+```{r}
+# Number of observations
+T <- length(y)
+
+# Time trend
+time <- 1:T
+
+# Regress y on a constant and a linear trend
+trend_model <- lm(as.numeric(y) ~ time)
+
+# Obtain residuals
+e <- residuals(trend_model)
+
+# Calculate cumulative sums of residuals
+S <- cumsum(e)
+
+# Plot cumulative sums
+plot(S, type = "l",
+     main = "Cumulative Sum of KPSS Residuals",
+     xlab = "Time",
+     ylab = "Cumulative Sum")
+abline(h = 0, lty = 2)
+
+# Calculate truncation lag
+ell <- floor(4 * (T / 100)^(1/4))
+
+# Calculate sample autocovariances
+gamma <- numeric(ell + 1)
+
+for (j in 0:ell) {
+    gamma[j + 1] <- sum(
+        e[(j + 1):T] * e[1:(T - j)]
+    ) / T
+}
+
+# Calculate HAC long-run variance using Bartlett kernel
+sigma2_hat <- gamma[1]
+
+for (j in 1:ell) {
+    weight <- 1 - j / (ell + 1)
+    sigma2_hat <- sigma2_hat +
+        2 * weight * gamma[j + 1]
+}
+
+# Calculate KPSS LM statistic
+LM_trend <- sum(S^2) / (T^2 * sigma2_hat)
+
+# Display results
+cat("Number of observations:", T, "\n")
+cat("Truncation lag:", ell, "\n")
+cat("HAC variance estimate:", sigma2_hat, "\n")
+cat("Manual KPSS LM statistic:", LM_trend, "\n")
+```
+
+#### Part (c)
+
+```{r}
+library(tseries)
+library(urca)
+
+# KPSS test with trend stationarity
+kpss_trend <- kpss.test(y, null = "Trend")
+print(kpss_trend)
+
+ur_kpss_trend <- ur.kpss(y, type = "tau")
+summary(ur_kpss_trend)
+
+# KPSS test with level stationarity
+kpss_level <- kpss.test(y, null = "Level")
+print(kpss_level)
+
+ur_kpss_level <- ur.kpss(y, type = "mu")
+summary(ur_kpss_level)
+```
+
+#### Part(d)
+
+The cumulative sum plot provides a visual interpretation of the KPSS test.
+
+If the cumulative sums remain close to zero and fluctuate without persistent movement, the LM statistic tends to be relatively small. This provides evidence in favor of the null hypothesis of stationary.
+
+In contrast, if the cumulative sums move persistently away from zero, the sum of their squared values increases. This produces a larger LM statistic and provides evidence against the null hypothesis of stationary.
+
+For the airpass series, the plot should be examined to determine whether the cumulative sums remain around zero or display persistent movements away from zero.
+
+### Part 7 – Joint Testing and Final Verdict
+
+#### (a) Summary of ADF, PP, and KPSS Tests
+
+The following table summarizes the results of the unit-root and stationarity tests at the 5% significance level.
+
+| Test | Specification | Test statistic | 5% Critical value | Decision on H0 | Conclusion |
+|------------|------------|------------|------------|------------|------------|
+| ADF (`ur.df`) | Trend | -1.5094 | -3.43 | Do not reject | Unit root cannot be rejected |
+| ADF (`adf.test`) | Default specification | -7.3186 | — | Reject (p = 0.01) | Evidence of stationarity |
+| PP (`ur.pp`) | Trend (Z-tau) | -5.0473 | -3.4417 | Reject | Evidence of trend stationarity |
+| KPSS (`ur.kpss`) | Trend (tau) | 0.0961 | 0.146 | Do not reject | Supports trend stationarity |
+| KPSS (`ur.kpss`) | Level (mu) | 2.7395 | 0.463 | Reject | Evidence against level stationarity |
+
+The results show that the PP test rejects the unit-root null hypothesis, while the trend KPSS test does not reject its null hypothesis. These two results support trend stationarity.
+
+However, the ADF test using `ur.df` with a trend specification does not reject the unit-root null hypothesis. The `adf.test()` function gives a different result, rejecting its null hypothesis with a p-value of 0.01. These differences may result from different lag-selection procedures and test specifications.
+
+The level KPSS test strongly rejects level stationary, indicating that the series is not stationary around a constant mean.
+
+### (b) Joint Interpretation of ADF/PP and KPSS Results
+
+The ADF/PP and KPSS tests have opposite null hypotheses. The four possible combinations are summarized below.
+
+| ADF/PP result | KPSS does not reject | KPSS rejects |
+|------------------------|------------------------|------------------------|
+| **ADF/PP rejects** | Both tests support stationarity under the selected specification. | Conflicting evidence; further investigation is required. |
+| **ADF/PP does not reject** | Inconclusive result; neither null hypothesis is rejected. | Both tests provide evidence against stationarity. |
+
+For the trend specification, the PP test rejects the unit-root null hypothesis, while the KPSS trend test does not reject the null hypothesis of trend stationarity. This combination supports trend stationarity.
+
+However, the ADF `ur.df` trend test does not reject the unit-root null hypothesis, whereas the PP test rejects it. Therefore, the ADF and PP results are not fully consistent. The `adf.test()` result also rejects the unit-root null hypothesis, showing that the conclusion depends partly on the test specification and lag-selection method.
+
+For the level specification, the KPSS test rejects the null hypothesis of level stationarity. This confirms that the raw series is not stationary around a constant mean.
+
+### (c) Final Verdict on the Raw AirPassengers Series
+
+Based on the graphical analysis, summary statistics, and statistical tests, the raw AirPassengers series is not stationary in its original form.
+
+The following sources of non-stationary have been identified:
+
+1.  **Trend:** The series has a clear upward trend from 1949 to 1960, indicating that its mean is not constant over time.
+
+2.  **Changing variance:** The variance increases substantially across the three time periods. The ratio of the largest to the smallest chunk variance is 5.63, indicating considerable variation in the series' volatility.
+
+3.  **Seasonality:** The series exhibits a repeating annual seasonal pattern with a period of 12 months. The amplitude of seasonal fluctuations also increases over time.
+
+4.  **Autocorrelation:** The series exhibits persistent temporal and seasonal dependence. However, the Ljung–Box test on squared ADF residuals gives a p-value of 0.938, so there is no significant evidence of autocorrelation in squared residuals up to lag 12.
+
+### Part 8– Transformations and re-testing
+
+#### Part(a)
+
+```{r}
+library(TSA)
+data(airpass)
+
+# Original monthly time series
+y <- ts(airpass, start = c(1949, 1), frequency = 12)
+
+# Log transformation
+log_y <- log(y)
+
+# Plot the log-transformed series
+plot(
+    log_y,
+    type = "l",
+    main = "Log-transformed Airline Passengers",
+    xlab = "Year",
+    ylab = "log(Passengers)"
+)
+
+# Divide the log series into three 48-month chunks
+log_chunk1 <- log_y[1:48]
+log_chunk2 <- log_y[49:96]
+log_chunk3 <- log_y[97:144]
+
+# Calculate chunk variances
+log_variances <- c(
+    var(log_chunk1),
+    var(log_chunk2),
+    var(log_chunk3)
+)
+
+names(log_variances) <- c("Chunk 1", "Chunk 2", "Chunk 3")
+
+print(log_variances)
+
+# Calculate the max/min variance ratio
+log_variance_ratio <- max(log_variances) / min(log_variances)
+
+print(log_variance_ratio)
+```
+
+The log transformation was applied to the original airline passenger series because the variance increased over time. After transformation, the variances of the three 48-month chunks were 0.04290, 0.04051, and 0.03340, respectively. The resulting maximum-to-minimum variance ratio was 1.2845, compared with 5.63 for the original series.
+
+This substantial decrease indicates that the logarithmic transformation stabilised the variance across the three chunks. The log-transformed plot still shows an upward trend and a seasonal pattern, but the seasonal fluctuations are more stable in magnitude.
+
+#### Part(b) (i)
+
+```{r}
+# Time index, centred around zero
+n <- length(log_y)
+time <- 1:n
+time_c <- time - mean(time)
+
+# Fit polynomial trend models
+model1 <- lm(as.numeric(log_y) ~ time_c)
+
+model2 <- lm(as.numeric(log_y) ~ time_c + I(time_c^2))
+
+model3 <- lm(as.numeric(log_y) ~ time_c + I(time_c^2) +
+                 I(time_c^3))
+
+# Display coefficient tests (including t-tests)
+summary(model1)
+summary(model2)
+summary(model3)
+
+# Compare nested models using F-tests
+anova(model1, model2)
+anova(model2, model3)
+anova(model1, model3)
+
+# Compare information criteria
+model_comparison <- data.frame(
+    Model = c("Linear", "Quadratic", "Cubic"),
+    AIC = c(AIC(model1), AIC(model2), AIC(model3)),
+    BIC = c(BIC(model1), BIC(model2), BIC(model3))
+)
+
+print(model_comparison)
+```
+
+Linear, quadratic, and cubic polynomial trends were fitted to the log-transformed series. The quadratic term was statistically significant (p = 0.00316), and the ANOVA comparison showed that the quadratic model significantly improved the linear model (F = 9.0216, p = 0.00316).
+
+However, the cubic term was not statistically significant (p = 0.70647), and the ANOVA comparison showed no significant improvement when moving from the quadratic to the cubic model (F = 0.1424, p = 0.7065).
+
+The quadratic model also had the lowest AIC (-162.5196) and BIC (-150.6403) among the three models. Therefore, the quadratic polynomial was selected because it provides a better fit than the linear model without the unnecessary complexity of a cubic model.
+
+#### Part(b)(ii)
+
+```{r}
+# Select the trend model based on the results above
+selected_model <- model2
+
+# Extract fitted polynomial trend
+fitted_trend <- fitted(selected_model)
+
+# Subtract the fitted trend
+trend_residuals <- as.numeric(log_y) - fitted_trend
+
+# Convert back to a monthly time series
+trend_residuals_ts <- ts(
+    trend_residuals,
+    start = start(log_y),
+    frequency = 12
+)
+
+# Calculate the mean for each calendar month
+monthly_means <- tapply(
+    trend_residuals,
+    cycle(log_y),
+    mean
+)
+
+print(monthly_means)
+
+# Remove the seasonal component
+seasonal_component <- monthly_means[cycle(log_y)]
+
+final_residuals <- trend_residuals - seasonal_component
+
+# Convert to a time series
+final_residuals_ts <- ts(
+    final_residuals,
+    start = start(log_y),
+    frequency = 12
+)
+
+# Plot the series after trend removal
+plot(
+    trend_residuals_ts,
+    type = "l",
+    main = "Log Series After Polynomial Detrending",
+    xlab = "Year",
+    ylab = "Detrended log(Passengers)"
+)
+
+# Plot the series after trend and seasonal removal
+plot(
+    final_residuals_ts,
+    type = "l",
+    main = "Log Series After Trend and Seasonal Removal",
+    xlab = "Year",
+    ylab = "Residuals"
+)
+
+# Reference line at zero
+abline(h = 0, col = "red", lty = 2)
+```
+
+The selected quadratic polynomial trend was subtracted from the log-transformed series. The resulting detrended series no longer exhibits a clear upward trend. However, a strong repeating seasonal pattern remains, indicating that detrending alone is insufficient to remove all systematic components.
+
+To remove seasonality, the average residual was calculated separately for each calendar month, and the corresponding monthly mean was subtracted from each observation. The estimated seasonal means show that July and August have the largest positive seasonal effects, whereas November has the largest negative seasonal effect.
+
+The final residual plot shows that the observations fluctuate around zero without a clear upward or downward trend. Furthermore, the repeating annual seasonal pattern has largely disappeared. The spread appears relatively stable, although some unusually large deviations and periods of consecutive positive or negative residuals remain.
+
+Overall, polynomial detrending followed by monthly seasonal adjustment has successfully removed the main deterministic trend and seasonal components. However, the remaining residual structure suggests that further investigation of autocorrelation may be necessary before concluding that the transformed series is fully stationary.
+
+#### Part(c)
+
+```{r}
+# Start again from the log-transformed series
+# First difference: Δlog(y_t)
+dlog_y <- diff(log_y, differences = 1)
+
+# Plot first-differenced log series
+plot(
+    dlog_y,
+    type = "l",
+    main = "First Difference of Log Airline Passengers",
+    xlab = "Year",
+    ylab = expression(Delta * log(y[t]))
+)
+abline(h = 0, col = "red", lty = 2)
+
+# Seasonal pattern can be assessed from the plot and ACF
+acf(
+    dlog_y,
+    main = "ACF of First-Differenced Log Series"
+)
+
+# Seasonal difference at lag 12:
+# Δ12 Δlog(y_t)
+routeB_final <- diff(dlog_y, lag = 12)
+
+# Plot the final Route B series
+plot(
+    routeB_final,
+    type = "l",
+    main = "First and Seasonal Difference of Log Airline Passengers",
+    xlab = "Year",
+    ylab = expression(Delta[12] * Delta * log(y[t]))
+)
+abline(h = 0, col = "red", lty = 2)
+
+acf(
+    routeB_final,
+    main = "ACF of Route B Final Series"
+)
+```
+
+Starting again from the log-transformed series, the first difference, $(\Delta\log(y_t))$, was calculated. The resulting series fluctuates around zero, indicating that the upward stochastic trend has largely been removed. However, a seasonal pattern remains visible in the run-sequence plot. This is also confirmed by the ACF, which shows a very strong positive spike at lag 12, corresponding to the annual seasonal cycle.
+
+Therefore, a seasonal difference with lag 12 was applied to the first-differenced log series, producing $(\Delta_{12}\Delta\log(y_t))$. The resulting series fluctuates around zero, and the repeating annual seasonal pattern is substantially reduced. Its spread also appears relatively stable over time.
+
+The ACF of the final Route B series still contains significant spikes, particularly at the first lag and at the seasonal lag. This indicates that some autocorrelation remains, even after regular and seasonal differencing.
+
+Overall, the plots suggest that Route B has successfully removed the main stochastic trend and annual seasonal pattern. However, further diagnostic testing is required to determine whether the final series can be considered stationary.
+
+#### Part(d)
+
+```{r}
+# Route A final series from Part 8(b)(ii)
+routeA_final <- final_residuals_ts
+
+# All five stages
+series_list <- list(
+    Raw = y,
+    Log = log_y,
+    Route_A_Final = routeA_final,
+    First_Difference = dlog_y,
+    Route_B_Final = routeB_final
+)
+
+# Deterministic specification for each stage
+specifications <- c(
+    Raw = "trend",
+    Log = "trend",
+    Route_A_Final = "constant",
+    First_Difference = "constant",
+    Route_B_Final = "constant"
+)
+diagnose_series <- function(x, series_name) {
+    
+    x <- as.numeric(x)
+    
+    # Divide the observations into 3 consecutive chunks
+    chunks <- split(
+        x,
+        cut(seq_along(x), breaks = 3, labels = FALSE)
+    )
+    
+    # Calculate chunk means and variances
+    chunk_means <- sapply(chunks, mean)
+    chunk_vars <- sapply(chunks, var)
+    
+    cat("\n---", series_name, "---\n")
+    cat("Chunk means:\n")
+    print(chunk_means)
+    
+    cat("Chunk variances:\n")
+    print(chunk_vars)
+    
+    cat("Variance ratio (max/min):\n")
+    print(max(chunk_vars) / min(chunk_vars))
+    
+    # Run-sequence plot
+    plot(
+        x,
+        type = "l",
+        main = paste("Run-sequence plot:", series_name),
+        xlab = "Observation",
+        ylab = "Value"
+    )
+    abline(h = mean(x), col = "red", lty = 2)
+    
+    # Histogram
+    hist(
+        x,
+        main = paste("Histogram:", series_name),
+        xlab = "Value"
+    )
+}
+
+# Run diagnostics for all five series
+for (nm in names(series_list)) {
+    diagnose_series(series_list[[nm]], nm)
+}
+```
+
+The run-sequence plots, chunk statistics, and histograms were examined for all five stages of the analysis.
+
+The original series exhibits a strong upward trend, annual seasonality, and increasing seasonal amplitude. Its chunk means increase from 158.375 to 413.479, while its variance ratio is 5.629, indicating substantial changes in both the mean and variance.
+
+After applying the logarithmic transformation, the variance ratio decreases to 1.284, indicating that the variance has been substantially stabilised. However, the upward trend and seasonal pattern remain visible.
+
+For Route A, after removing the quadratic trend and monthly seasonal components, the chunk means are all close to zero and the variance ratio is 1.297. The run-sequence plot shows no obvious remaining trend or seasonal pattern. Its histogram is also approximately centred around zero.
+
+For Route B, the first-differenced log series has a variance ratio of 1.241 and fluctuates around zero. However, annual seasonality remains visible, which motivated the additional seasonal differencing. After seasonal differencing, the final series fluctuates around zero without an obvious trend or repeating seasonal pattern. Nevertheless, its variance ratio is 2.809, suggesting some differences in variance across the three chunks.
+
+The histograms of both final transformed series are centred approximately around zero. The Route B histogram appears relatively concentrated and bell-shaped, while the Route A histogram shows some asymmetry.
+
+Overall, the graphical and descriptive diagnostics suggest that both routes remove the main trend and seasonal components. However, Route A shows more consistent variance across the three chunks than Route B. Formal ADF, PP, and KPSS tests are still required to compare their stationarity properties more rigorously. Autocorrelation should also be investigated because the run-sequence plots alone cannot establish whether the remaining observations are independent.
+
+```{r}
+
+adf_aic <- ur.df(
+    routeB_final, type = "drift",
+    lags = 12, selectlags = "AIC"
+)
+
+adf_bic <- ur.df(
+    routeB_final, type = "drift",
+    lags = 12, selectlags = "BIC"
+)
+
+summary(adf_aic)
+summary(adf_bic)
+```
+
+The ADF test was performed using both AIC and BIC lag-selection criteria. AIC selected 12 lagged differences, producing an ADF statistic of -4.4433, whereas BIC selected one lagged difference, producing a statistic of -8.7740. The difference arises because the two information criteria select different regression specifications. Nevertheless, both statistics are below the 5% critical value of -2.88 (and the 1% critical value of -3.46). Thus, both specifications reject the unit-root null hypothesis.
+
+The agreement between the ADF results under AIC and BIC, the PP test, and the KPSS test provides consistent evidence that the final Route B series is stationary around a constant mean.
+
+```{r}
+run_tests <- function(x, specification) {
+    
+    adf_type <- if (specification == "trend") "trend" else "drift"
+    pp_model <- if (specification == "trend") "trend" else "constant"
+    kpss_type <- if (specification == "trend") "tau" else "mu"
+    
+    adf_aic <- ur.df(
+        x, type = adf_type,
+        lags = 12, selectlags = "AIC"
+    )
+    
+    adf_bic <- ur.df(
+        x, type = adf_type,
+        lags = 12, selectlags = "BIC"
+    )
+    
+    adf_aic_stat <- as.numeric(adf_aic@teststat[1, 1])
+    adf_bic_stat <- as.numeric(adf_bic@teststat[1, 1])
+    
+    adf_aic_cv <- as.numeric(adf_aic@cval[1, "5pct"])
+    adf_bic_cv <- as.numeric(adf_bic@cval[1, "5pct"])
+    
+    pp <- ur.pp(
+        x, type = "Z-tau",
+        model = pp_model, lags = "short"
+    )
+    
+    pp_stat <- as.numeric(pp@teststat)
+    pp_cv <- as.numeric(pp@cval[1, "5pct"])
+    
+    kpss <- ur.kpss(
+        x, type = kpss_type, lags = "short"
+    )
+    
+    kpss_stat <- as.numeric(kpss@teststat)
+    kpss_cv <- as.numeric(kpss@cval[1, "5pct"])
+    
+    list(
+        ADF_AIC = adf_aic_stat,
+        ADF_BIC = adf_bic_stat,
+        PP = pp_stat,
+        KPSS = kpss_stat,
+        
+        ADF_AIC_Decision = if (adf_aic_stat < adf_aic_cv)
+            "Reject H0" else "Do not reject H0",
+        
+        ADF_BIC_Decision = if (adf_bic_stat < adf_bic_cv)
+            "Reject H0" else "Do not reject H0",
+        
+        PP_Decision = if (pp_stat < pp_cv)
+            "Reject H0" else "Do not reject H0",
+        
+        KPSS_Decision = if (kpss_stat > kpss_cv)
+            "Reject H0" else "Do not reject H0"
+    )
+}
+```
+
+```{r}
+test_results <- lapply(names(series_list), function(nm) {
+    run_tests(
+        series_list[[nm]],
+        specifications[[nm]]
+    )
+})
+
+names(test_results) <- names(series_list)
+```
+
+```{r}
+results_table <- do.call(
+    rbind,
+    lapply(names(test_results), function(nm) {
+        
+        r <- test_results[[nm]]
+        
+        data.frame(
+            Stage = nm,
+            ADF_AIC = r$ADF_AIC,
+            ADF_BIC = r$ADF_BIC,
+            PP = r$PP,
+            KPSS = r$KPSS,
+            ADF_AIC_Decision = r$ADF_AIC_Decision,
+            ADF_BIC_Decision = r$ADF_BIC_Decision,
+            PP_Decision = r$PP_Decision,
+            KPSS_Decision = r$KPSS_Decision
+        )
+    })
+)
+
+print(results_table, row.names = FALSE)
+```
+
+The results of the ADF, PP, and KPSS tests were compared for all five stages at the 5% significance level.
+
+For the raw and log-transformed series, the ADF test fails to reject the unit-root null, whereas the PP test rejects it. The KPSS test does not reject its trend-stationarity null. Therefore, the test results are not fully consistent. The graphical diagnostics also indicate that the raw series contains a strong upward trend and annual seasonality. The log transformation substantially stabilises the variance but does not eliminate the trend or seasonal pattern.
+
+For Route A, all three tests provide evidence supporting stationarity. The ADF statistic is -4.353 for both AIC and BIC, the PP statistic is -5.247, and the KPSS statistic is 0.0647. The ADF and PP tests reject the unit-root null, while the KPSS test does not reject the stationarity null. The variance ratio of 1.297 also indicates relatively stable variance across the three chunks.
+
+For the first-differenced log series, all three tests also support stationarity. However, the graphical diagnostics and ACF show that annual seasonality remains. Therefore, seasonal differencing at lag 12 was applied to obtain the final Route B series.
+
+For Route B, the ADF test rejects the unit-root null under both AIC and BIC lag selection. The PP test also rejects the unit-root null, while the KPSS test does not reject the stationarity null. These results provide consistent evidence supporting stationarity of the final Route B series.
+
+Overall, both Route A and Route B successfully remove the main non-stationary components of the original airline passenger series. Route A uses a deterministic quadratic trend and monthly seasonal adjustment, whereas Route B uses regular and seasonal differencing to remove stochastic trend and seasonality. Although both routes produce stationary final series according to the formal tests, Route A has a lower chunk variance ratio (1.297) than Route B (2.809), suggesting more stable variance across the three chunks.
+
+Consequently, both approaches are reasonable, but Route A provides somewhat better variance stability for this dataset. The choice between them depends on whether the underlying trend is assumed to be deterministic or stochastic.
+
+### Part (e) – Interpretation
+
+**(i) Choice between Route A and Route B**
+
+The joint-testing results support both transformation routes. For Route A, the ADF and PP tests reject the unit-root null, while the KPSS test does not reject the stationarity null. This supports stationarity after removing the deterministic quadratic trend and monthly seasonal effects.
+
+For Route B, the ADF tests using both AIC and BIC, the PP test, and the KPSS test also support stationarity after regular and seasonal differencing.
+
+However, the test results for the original series do not conclusively distinguish between deterministic and stochastic trends. The PP and KPSS trend tests are compatible with trend stationarity, although the ADF test does not reject the unit-root null.
+
+I would slightly favour Route A for modelling. The quadratic trend is statistically significant, and both AIC and BIC favour the quadratic model over the linear model. Furthermore, Route A has a lower chunk variance ratio (1.297) than Route B (2.809), indicating more stable variance across the three chunks. Therefore, I would use the Route A final residual series for modelling, while recognising Route B as a valid alternative under the stochastic-trend assumption.
+
+**(ii) Variance comparison**
+
+The log transformation substantially stabilises the variance. The ratio of the largest to the smallest chunk variance decreases from 5.629 in the original series to 1.284 in the log-transformed series. This provides strong justification for applying the logarithmic transformation.
+
+The effect of first differencing and seasonal differencing on the overall variance should be assessed using the calculated sample variances of the three transformed series. These transformations are primarily intended to remove stochastic trend and seasonal dependence, rather than to minimise variance.
+
+First differencing is justified by the trend and the stationarity diagnostics. Seasonal differencing is justified by the remaining annual seasonal pattern in the first-differenced series and its ACF. Therefore, even if either differencing operation increases the overall variance, it can still be appropriate if it removes a source of non-stationarity.
